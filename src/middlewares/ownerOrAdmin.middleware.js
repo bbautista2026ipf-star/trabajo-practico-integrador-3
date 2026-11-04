@@ -15,6 +15,7 @@ export const ownerOrAdminMiddleware = async (req, res, next) => {
     }
     next();
   } catch (error) {
-    res.status(500).json({ message: "Error del servidor" });
+    console.log(error);
+    return res.status(500).json({ message: "Error interno del servidor" });
   }
 };
