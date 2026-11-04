@@ -1,3 +1,4 @@
+import { matchedData } from "express-validator";
 import { UserModel } from "../models/user.model.js";
 import { hashPassword, comparePassword } from "../helpers/bcrypt.helper.js";
 import { generateToken } from "../helpers/jwt.helper.js";
@@ -10,7 +11,7 @@ const cookieOptions = {
 
 export const register = async (req, res) => {
   try {
-    const { username, email, password, profile } = req.body;
+    const { username, email, password, profile } = matchedData(req);
 
     const exists = await UserModel.findOne({ $or: [{ email }, { username }] });
     if (exists) {
@@ -30,16 +31,18 @@ export const register = async (req, res) => {
     const userData = user.toObject();
     delete userData.password;
 
-    res.status(201).json({ message: "Usuario registrado", user: userData });
+    return res
+      .status(201)
+      .json({ message: "Usuario registrado", user: userData });
   } catch (error) {
     console.log(error);
-    res.status(500).json({ message: "Error del servidor" });
+    return res.status(500).json({ message: "Error interno del servidor" });
   }
 };
 
 export const login = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password } = matchedData(req);
 
     const user = await UserModel.findOne({ email, deletedAt: null });
     if (!user) {
@@ -60,10 +63,10 @@ export const login = async (req, res) => {
     const userData = user.toObject();
     delete userData.password;
 
-    res.status(200).json({ message: "Login exitoso", user: userData });
+    return res.status(200).json({ message: "Login exitoso", user: userData });
   } catch (error) {
     console.log(error);
-    res.status(500).json({ message: "Error del servidor" });
+    return res.status(500).json({ message: "Error interno del servidor" });
   }
 };
 
@@ -72,16 +75,16 @@ export const getProfile = async (req, res) => {
     const userData = req.user.toObject();
     delete userData.password;
 
-    res.status(200).json({ user: userData });
+    return res.status(200).json({ user: userData });
   } catch (error) {
     console.log(error);
-    res.status(500).json({ message: "Error del servidor" });
+    return res.status(500).json({ message: "Error interno del servidor" });
   }
 };
 
 export const updateProfile = async (req, res) => {
   try {
-    const { profile } = req.body;
+    const { profile } = matchedData(req);
 
     const user = await UserModel.findByIdAndUpdate(
       req.user._id,
@@ -89,19 +92,19 @@ export const updateProfile = async (req, res) => {
       { returnDocument: "after", runValidators: true },
     ).select("-password");
 
-    res.status(200).json({ message: "Perfil actualizado", user });
+    return res.status(200).json({ message: "Perfil actualizado", user });
   } catch (error) {
     console.log(error);
-    res.status(500).json({ message: "Error del servidor" });
+    return res.status(500).json({ message: "Error interno del servidor" });
   }
 };
 
 export const logout = async (req, res) => {
   try {
     res.clearCookie("token", cookieOptions);
-    res.status(200).json({ message: "Sesión cerrada" });
+    return res.status(200).json({ message: "Sesión cerrada" });
   } catch (error) {
     console.log(error);
-    res.status(500).json({ message: "Error del servidor" });
+    return res.status(500).json({ message: "Error interno del servidor" });
   }
 };
